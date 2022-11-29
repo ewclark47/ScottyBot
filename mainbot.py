@@ -11,7 +11,12 @@ app = App(token = SLACK_BOT_TOKEN)
 
 @app.event("app_mention")
 def mention_handler(body, say):
-	say("Hello World!")
+	event = body['event'] # pulls the part of the body dictionary that contains the user message
+	text = event['text'] 
+	message = text[15:] # this is just the user input message without the bot name
+	# the above is the full uterance
+	print(message)
+	say("Hello World! You said, " + text)
 
 if __name__ == "__main__":
 	handler = SocketModeHandler(app, SLACK_APP_TOKEN)

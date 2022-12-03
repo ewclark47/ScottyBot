@@ -34,7 +34,7 @@ def switch(action, categories, values):
 		res = luis.dropCourse(12345)
 	elif action == "FindCourse":
 		# go through entities and find a topic or something to pass on to LUIS
-		res = luis.FindCourse("Just something to test here")
+		res = luis.findCourse("Just something to test here")
 	elif action == "ViewSchedule":
 		res = luis.viewSchedule
 	return res
@@ -47,8 +47,8 @@ def mention_handler(body, say):
 	# the above is the full uterance
 	print(message)
 
-	result = LUIS.getLuisResults(message)
-	LUIS.displayResults(message)
+	result = luis.getLuisResults(message)
+	luis.displayResults(message)
 
 	action = result["result"]["prediction"]["topIntent"]
 	entity_cats = []

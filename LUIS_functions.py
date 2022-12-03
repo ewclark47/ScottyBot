@@ -67,21 +67,21 @@ class LUIS:
                     if data["extraInformationKind"] == "EntitySubtype":
                         print("value: {}".format(data["value"]))
 
-    def addCourse(courseNumber):
+    def addCourse(self, courseNumber):
         # this will be the method call for adding a course
-        bot_respone = "Ok I'll add course " + courseNumber + " to your schedule!"
+        bot_respone = "Ok I'll add course " + str(courseNumber) + " to your schedule!"
         return bot_respone
     
-    def dropCourse(courseNumber):
+    def dropCourse(self, courseNumber):
         #this will be the method call for dropping a course
-        bot_respone = "Ok I'll drop course " + courseNumber + " from your schedule!"
+        bot_respone = "Ok I'll drop course " + str(courseNumber) + " from your schedule!"
         return bot_respone
     
-    def findCourse(description):
+    def findCourse(self, description):
         #this will be the method call for finding courses
         bot_response = "Are any of these the course you are looking for?"
         return bot_response
 
-    def viewSchedule():
+    def viewSchedule(self):
         #this will be the method call for displaying the schedule
         return "Ok, let's look at your schedule"

@@ -82,6 +82,7 @@ class LUIS:
         bot_response = "Are any of these the course you are looking for?"
         return bot_response
 
-    def viewSchedule(self):
+    def viewSchedule(self, scheduleString):
         #this will be the method call for displaying the schedule
-        return "Ok, let's look at your schedule"
+        bot_response = "OK, let's look at your schedule!" + "\n" + scheduleString
+        return bot_response

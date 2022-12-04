@@ -3,6 +3,7 @@ from dotenv import load_dotenv
 from slack_bolt import App
 from slack_bolt.adapter.socket_mode import SocketModeHandler
 from LUIS_functions import LUIS
+import database_functions
 
 load_dotenv()
 SLACK_BOT_TOKEN = environ['SLACK_BOT_TOKEN']
@@ -16,36 +17,40 @@ deployment_name = environ["AZURE_CONVERSATIONS_DEPLOYMENT_NAME"]
 app = App(token = SLACK_BOT_TOKEN)
 luis = LUIS(clu_endpoint, clu_key, project_name, deployment_name)
 
-def addCourse():
-	return "Adding Course"
-	
-def dropCourse():
-	return "Dropping Course"
 
-def findCourse():
-	return "Finding Course"
-
-def switch(action, categories, values):
+def switch(action, categories, values, username):
 	if action == "AddCourse":
 		# then go through entity categorys to see if there is a course number, if not request it
-		res = luis.addCourse(12345)
+		for i in range(len(categories)):
+			if categories[i]=='CourseNumber':
+				database_functions.addCourse(username, values[i])
+				res = luis.addCourse(values[i])
 	elif action == "DropCourse":
 		# then go through entity categorys to see if there is a course number, if not request it
+		for i in range(len(categories)):
+			if categories[i]=='CourseNumber':
+				database_functions.dropCourse(username, values[i])
+				res = luis.addCourse(values[i])
 		res = luis.dropCourse(12345)
 	elif action == "FindCourse":
 		# go through entities and find a topic or something to pass on to LUIS
 		res = luis.findCourse("Just something to test here")
 	elif action == "ViewSchedule":
-		res = luis.viewSchedule
+		scheduleString = database_functions.viewSchedule(username)
+		res = luis.viewSchedule(scheduleString)
 	return res
 
 @app.event("app_mention")
 def mention_handler(body, say):
 	event = body['event'] # pulls the part of the body dictionary that contains the user message
 	text = event['text'] 
+	user = "<@" + event['user'] + ">"
+	username=user[1:]
 	message = text[15:] # this is just the user input message without the bot name
 	# the above is the full uterance
+	print(event)
 	print(message)
+	
 
 	result = luis.getLuisResults(message)
 	luis.displayResults(message)
@@ -57,10 +62,8 @@ def mention_handler(body, say):
 		entity_cats.append(entity["category"])
 		entity_vals.append(entity["text"])
         
-	bot_response = switch(action, entity_cats, entity_vals)
-	say(bot_response)
-
-	#say("So you want me to " + result["result"]["prediction"]["topIntent"] + "?")
+	bot_response = switch(action, entity_cats, entity_vals, username)
+	say(bot_response + "\n" + user)  # user variable holds the @name of whoever initiated the bot, use everything after the @ as the username for the db calls
 
 if __name__ == "__main__":
 	handler = SocketModeHandler(app, SLACK_APP_TOKEN)

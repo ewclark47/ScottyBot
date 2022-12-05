@@ -1,5 +1,14 @@
 """
 help with integration into bot at: https://github.com/Azure/azure-sdk-for-python/blob/main/sdk/cognitivelanguage/azure-ai-language-conversations/samples/sample_analyze_conversation_app.py
+
+author: Elliott Clark
+This module incorporates the functionality of the Microsoft Azure LUIS project 
+for ScottyBot. The LUIS class includes functions to iniate and instance of LUIS.
+Use LUIS to predict Intent and included Entities from user input (message to ScottyBot).
+The LUIS class also has a function to print the predicted results to the console as well
+as functions that determine the responses for the user trying to add a course, drop a 
+course, find a course or view their schedule. LUIS responses will hopefully be augmented
+or replaced by GPT-3 generative response functionality.
 """
 
 class LUIS: 
@@ -14,6 +23,7 @@ class LUIS:
         from azure.core.credentials import AzureKeyCredential
         from azure.ai.language.conversations import ConversationAnalysisClient
 
+        # initialize client with the Azure project and then analyze the user input for predictions
         client = ConversationAnalysisClient(self.clu_endpoint, AzureKeyCredential(self.clu_key))
         with client:
             result = client.analyze_conversation(
@@ -68,21 +78,17 @@ class LUIS:
                         print("value: {}".format(data["value"]))
 
     def addCourse(self, courseNumber):
-        # this will be the method call for adding a course
         bot_respone = "Ok I'll add course " + str(courseNumber) + " to your schedule!"
         return bot_respone
     
     def dropCourse(self, courseNumber):
-        #this will be the method call for dropping a course
         bot_respone = "Ok I'll drop course " + str(courseNumber) + " from your schedule!"
         return bot_respone
     
     def findCourse(self, description):
-        #this will be the method call for finding courses
         bot_response = "Are any of these the course you are looking for?"
         return bot_response
 
     def viewSchedule(self, scheduleString):
-        #this will be the method call for displaying the schedule
         bot_response = "OK, let's look at your schedule!" + "\n" + scheduleString
         return bot_response

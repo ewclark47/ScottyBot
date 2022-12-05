@@ -41,7 +41,7 @@ def switch(action, categories, values, username):
 		# then go through entity categorys to see if there is a course number, if not request it
 		for i in range(len(categories)):
 			if categories[i]=='CourseNumber':
-				#database_functions.addCourse(username, values[i]) # database functions not fully ready
+				database_functions.addCourse(username, values[i]) # database functions not fully ready
 				luisResponse = luis.addCourse(values[i])
 			else:
 				luisResponse = "Please try again, I didn't quite get that course number"
@@ -67,7 +67,7 @@ def mention_handler(body, say):
 	event = body['event'] # pulls the part of the body dictionary that contains the user message
 	text = event['text'] 
 	user = "<@" + event['user'] + ">"
-	username=user[1:] # the users name without the @ symbol for use in the database
+	username=user[2:-1] # the users name without the @ symbol for use in the database
 	message = text[15:] # this is just the user input message without the bot name
 	# the above is the full uterance
 	#print(event) 

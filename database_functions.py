@@ -44,6 +44,9 @@ def checkUser(username):
         print("added user: " + str(addedUser))
         return True
 
+# Check to see if the user that mentioned ScottyBot has a schedule
+# If so, return True. If not, add a schedule for the user to the database and then 
+# return True
 def checkUserSchedule(userID):
     print(userID)
     queryString = "SELECT * FROM schedules WHERE UserID="+str(userID)
@@ -81,8 +84,6 @@ def addCourse(username, courseNumber):
             userID = userID[0]
             print("Got the users ID")
             # get how many courses this user has (IF THEY HAVE THEM) and then add in the request course as 'course#' based on that number
-            # AS OF RIGHT NOW IT IS JUST TRYING TO GET COURSECOUNT EVEN THOUGH THERE ARE NO SCHEDULES
-            # MAKE SURE TO CHECK IF THERE ARE SCHEDULES AND THEN DO THAT
             if checkUserSchedule(userID):
                 print("Validated or added schedule for this user")
                 queryString = "SELECT CourseCount FROM schedules WHERE UserID="+str(userID)
@@ -91,14 +92,29 @@ def addCourse(username, courseNumber):
                 print("Got the Course Count " + str(courseCount[0]))
                 courseCount = courseCount[0]+1
                 ## **EITHER MAKE A CHECK TO SEE IF COLUMN EXIST OR BASELINE X CLASSES FOR EVERYONE AND JUST INSERT INFO
-                queryString = "ALTER TABLE schedules ADD `Course "+str(courseCount)+"` VARCHAR(500)"
-                cursor.execute(queryString)
-                queryString = "UPDATE schedules SET CourseCount="+str(courseCount)+" WHERE UserID="+str(userID)
-                cursor.execute(queryString)
-                print("This users course count after adding a course: " + str(courseCount))
-                queryString = "UPDATE schedules SET `Course "+str(courseCount)+"`=\'"+str(courseInfo)+"\' WHERE UserID="+str(userID)
-                cursor.execute(queryString)
-                print("added: " + str(courseInfo) + "to the users schedule")
+                # testing below -- ask one of the others to try and add a course
+                cursor.execute("SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME='schedules'")
+                scheduleColumns = cursor.fetchall()
+                columnList =[]
+                for column in scheduleColumns:
+                    columnList.append(column[0])
+                updateCol = "Column " + str(courseCount)
+                if updateCol in columnList:
+                    queryString = "UPDATE schedules SET `"+updateCol+"`=\'"+str(courseInfo)+"\' WHERE UserID="+str(userID)
+                    cursor.execute(queryString)
+                    mydb.commit()
+                # end testing
+                else:
+                    queryString = "ALTER TABLE schedules ADD `Course "+str(courseCount)+"` VARCHAR(500)"
+                    cursor.execute(queryString)
+                    queryString = "UPDATE schedules SET CourseCount="+str(courseCount)+" WHERE UserID="+str(userID)
+                    cursor.execute(queryString)
+                    mydb.commit() # manual commit added because database was not receiving autocommit from update query
+                    print("This users course count after adding a course: " + str(courseCount))
+                    queryString = "UPDATE schedules SET `Course "+str(courseCount)+"`=\'"+str(courseInfo)+"\' WHERE UserID="+str(userID)
+                    cursor.execute(queryString)
+                    mydb.commit() # manual commit added because database was not receiving autocommit from update query
+                    print("added: " + str(courseInfo) + "to the users schedule")
         else:
             print("Issue with the username")
 
@@ -116,6 +132,21 @@ def dropCourse(username, courseNumber):
         # name for whichever course entry contain the specified course number
         # (our course description) 
         # then update that column to null for the user "dropping" that course
+        cursor.execute("SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME='schedules'")
+        scheduleColumns = cursor.fetchall()
+        columnList =[]
+        for column in scheduleColumns:
+            columnList.append(column[0])
+        cursor.execute("SELECT * FROM schedules WHERE UserID="+str(userID))
+        scheduleRow=cursor.fetchone()
+        scheduleValues = []
+        for value in scheduleRow:
+            scheduleValues.append(value)
+        for i in range(len(scheduleValues)):
+            if str(courseNumber) in str(scheduleValues[i]):
+                columnName = columnList[i]
+        cursor.execute("UPDATE schedules SET `"+str(columnName)+"`=\' \'")
+        mydb.commit()
         
     except mysql.connector.Error as e:
         print(e)
@@ -157,11 +188,46 @@ def query_with_fetchall():
                 new_str += str(r)+", "
             print(new_str)
 
+        """ cursor.execute("SELECT * FROM users")
+        rows = cursor.fetchall()
+        print("Total Users: ", cursor.rowcount)
+        for row in rows:
+            print(row) """
+
+        # testing to figure out how to make updates go through in the database
+        """ cursor.execute("UPDATE users SET UserName='testing testing' WHERE UserID=2")
+        mydb.commit()
         cursor.execute("SELECT * FROM users")
         rows = cursor.fetchall()
         print("Total Users: ", cursor.rowcount)
         for row in rows:
-            print(row)
+            print(row) """
+
+        # testing to get a course column check to make sure we aren't trying to add a column that exists
+        cursor.execute("SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME='schedules'")
+        scheduleColumns = cursor.fetchall()
+        print("Schedules table columns output: ")
+        columnList =[]
+        for column in scheduleColumns:
+            columnList.append(column[0])
+        print(columnList)
+        print('Course 1' in columnList)
+        print('Course 4' in columnList)
+        cursor.execute("SELECT * FROM schedules WHERE UserID="+str(24))
+        scheduleRow=cursor.fetchone()
+        scheduleValues = []
+        for value in scheduleRow:
+            scheduleValues.append(value)
+        for i in range(len(scheduleValues)):
+            if str(95702) in str(scheduleValues[i]):
+                print("Column for this course: " + columnList[i])
+                columnName = columnList[i]
+        cursor.execute("UPDATE schedules SET `"+str(columnName)+"`= \' \'")
+        mydb.commit()
+        ## the above drops the course but need to make sure courses get shifted
+        # so that there aren't random gaps
+        # Get the number of courses and then use number of courses to drop and shift
+        # info rather than using the whole column name
         
     except mysql.connector.Error as e:
         print(e)

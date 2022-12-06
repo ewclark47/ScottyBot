@@ -23,7 +23,6 @@ cursor = mydb.cursor()
 # If so, return True. If not, add the user to the database and then 
 # return True
 def checkUser(username):
-    #cursor = mydb.cursor()
     print(username)
     print(type(username))
     queryString = "SELECT * FROM users WHERE UserName=\'"+str(username)+"\'"
@@ -41,11 +40,12 @@ def checkUser(username):
         cursor.execute(queryString)
         addedUser = cursor.fetchall()
         print("Second part of checkUser ran")
+        print(addedUser[0][0])
         print("added user: " + str(addedUser))
-        #cursor.close()
         return True
 
 def checkUserSchedule(userID):
+    print(userID)
     queryString = "SELECT * FROM schedules WHERE UserID="+str(userID)
     cursor.execute(queryString)
     scheduleDoesExist = cursor.fetchall()
@@ -54,15 +54,23 @@ def checkUserSchedule(userID):
         return True
     else:
         # add in a schedule for this user with default values
+        print("Went on to checkUserSchedule second part")
+        queryString = "INSERT INTO schedules(UserID) VALUES ("+str(userID)+")"
+        cursor.execute(queryString)
+        print("Added row to schedules with this users userID")
         return True
 
 def addCourse(username, courseNumber):
     print("Start of addCourse database function")
     try:
-        #cursor = mydb.cursor()
         queryString = "SELECT * FROM course WHERE CourseNumber=" + str(courseNumber)
         cursor.execute(queryString)
         courseInfo = cursor.fetchone()
+        courseInfo = courseInfo[1:]
+        new_str = ""
+        for r in courseInfo:
+            new_str += str(r)+", "
+        courseInfo = new_str
         print("Got the course info")
         #print("UserName check function: " + str(checkUser(username)))
         if checkUser(username):
@@ -70,71 +78,68 @@ def addCourse(username, courseNumber):
             queryString = "SELECT UserID FROM users WHERE UserName=\'"+str(username)+"\'"
             cursor.execute(queryString)
             userID = cursor.fetchone()
+            userID = userID[0]
             print("Got the users ID")
             # get how many courses this user has (IF THEY HAVE THEM) and then add in the request course as 'course#' based on that number
             # AS OF RIGHT NOW IT IS JUST TRYING TO GET COURSECOUNT EVEN THOUGH THERE ARE NO SCHEDULES
             # MAKE SURE TO CHECK IF THERE ARE SCHEDULES AND THEN DO THAT
             if checkUserSchedule(userID):
+                print("Validated or added schedule for this user")
                 queryString = "SELECT CourseCount FROM schedules WHERE UserID="+str(userID)
                 cursor.execute(queryString)
                 courseCount = cursor.fetchone()
-                print("Got the Course Count")
-                courseCount = int(courseCount)+1
-                print(courseCount)
-                # right here need to also update the row to reflect that this user has another course now
-                print("Incremented course count")
-                # add the new course and increment CourseCount
-                queryString = "ALTER TABLE schedules ADD Course "+str(courseCount)+" VARCHAR(150)"
+                print("Got the Course Count " + str(courseCount[0]))
+                courseCount = courseCount[0]+1
+                ## **EITHER MAKE A CHECK TO SEE IF COLUMN EXIST OR BASELINE X CLASSES FOR EVERYONE AND JUST INSERT INFO
+                queryString = "ALTER TABLE schedules ADD `Course "+str(courseCount)+"` VARCHAR(500)"
                 cursor.execute(queryString)
-                queryString = "INSERT INTO schedules (CourseCount, Course "+str(courseCount)+") VALUES ("+str(courseCount) + ", \'" +str(courseInfo)+"\') WHERE UserID="+str(userID)
+                queryString = "UPDATE schedules SET CourseCount="+str(courseCount)+" WHERE UserID="+str(userID)
                 cursor.execute(queryString)
+                print("This users course count after adding a course: " + str(courseCount))
+                queryString = "UPDATE schedules SET `Course "+str(courseCount)+"`=\'"+str(courseInfo)+"\' WHERE UserID="+str(userID)
+                cursor.execute(queryString)
+                print("added: " + str(courseInfo) + "to the users schedule")
         else:
             print("Issue with the username")
 
     except mysql.connector.Error as e:
         print(e)
 
-    finally:
-        cursor.close()
-        mydb.close()
-
 def dropCourse(username, courseNumber):
     try:
         cursor = mydb.cursor()
-        queryString = "SELECT * FROM course WHERE CourseNumber=" + str(courseNumber)
-        cursor.execute(queryString)
-        courseInfo = cursor.fetchone()
         queryString = "SELECT UserID FROM users WHERE username=\'"+str(username)+"\'"
-        userID = cursor.execute(queryString)
-        # get how many courses this user has and then add in the request course as 'course#' based on that number
-
-    except mysql.connector.Error as e:
-        print(e)
-
-    finally:
-        cursor.close()
-        mydb.close()
-
-def viewSchedule(username):
-    try:
-        cursor = mydb.cursor()
-        queryString = "SELECT UserID FROM users WHERE username="+str(username)
-        userID = cursor.execute(queryString)
-        queryString = "SELECT * FROM schedule WHERE UserID="+str(userID)
         cursor.execute(queryString)
-        rows = cursor.fetchall()
-
-        scheduleString = ""
-        for row in rows:
-            scheduleString+= row + "\n"
-        return scheduleString
+        userID = cursor.fetchone()
+        userID=userID[0]
+        # iterate through the schedule and figure out how to get the column
+        # name for whichever course entry contain the specified course number
+        # (our course description) 
+        # then update that column to null for the user "dropping" that course
         
     except mysql.connector.Error as e:
         print(e)
 
-    finally:
-        cursor.close()
-        mydb.close()
+def viewSchedule(username):
+    try:
+        cursor = mydb.cursor()
+        queryString = "SELECT UserID FROM users WHERE UserName=\'"+str(username)+"\'"
+        userID = cursor.execute(queryString)
+        userID = cursor.fetchone()
+        userID=userID[0]
+        print("User's ID is: " + str(userID))
+        queryString = "SELECT * FROM schedules WHERE UserID="+str(userID)
+        cursor.execute(queryString)
+        row = cursor.fetchone()
+        print(row[3:])
+
+        scheduleString=""
+        for r in row[3:]:
+            scheduleString += str(r)+"\n "
+        return scheduleString
+        
+    except mysql.connector.Error as e:
+        print(e)
 
 
 # below was used for testing and will not be functionality in the final product
@@ -147,6 +152,10 @@ def query_with_fetchall():
         print("Total Rows(s):", cursor.rowcount)
         for row in rows:
             print(row)
+            new_str = ""
+            for r in row[1:]:
+                new_str += str(r)+", "
+            print(new_str)
 
         cursor.execute("SELECT * FROM users")
         rows = cursor.fetchall()

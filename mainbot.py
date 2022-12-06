@@ -57,8 +57,8 @@ def switch(action, categories, values, username):
 		# go through entities and find a topic or something to pass on to LUIS
 		luisResponse = luis.findCourse("Just something to test here")
 	elif action == "ViewSchedule":
-		scheduleString = "This will be replaced by info from the database"
-		#scheduleString = database_functions.viewSchedule(username) # database functions not fully ready
+		#scheduleString = "This will be replaced by info from the database"
+		scheduleString = database_functions.viewSchedule(username) # database functions not fully ready
 		luisResponse = luis.viewSchedule(scheduleString)
 	return luisResponse
 

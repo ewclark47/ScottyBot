@@ -41,7 +41,7 @@ def switch(action, categories, values, username):
 		# then go through entity categorys to see if there is a course number, if not request it
 		for i in range(len(categories)):
 			if categories[i]=='CourseNumber':
-				database_functions.addCourse(username, values[i]) # database functions not fully ready
+				database_functions.addCourse(username, values[i])
 				luisResponse = luis.addCourse(values[i])
 			else:
 				luisResponse = "Please try again, I didn't quite get that course number"
@@ -49,7 +49,7 @@ def switch(action, categories, values, username):
 		# then go through entity categorys to see if there is a course number, if not request it
 		for i in range(len(categories)):
 			if categories[i]=='CourseNumber':
-				#database_functions.dropCourse(username, values[i]) # database functions not fully ready
+				database_functions.dropCourse(username, values[i])
 				luisResponse = luis.dropCourse(values[i])
 			else:
 				luisResponse = "Please try again, I didn't quite get that course number"

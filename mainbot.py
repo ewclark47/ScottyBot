@@ -55,8 +55,12 @@ def switch(action, categories, values, username):
 				luisResponse = "Please try again, I didn't quite get that course number"
 	elif action == "FindCourse":
 		# go through entities and find a topic or course number to pass on to LUIS
-		## Database function working so do this part next ##
-		luisResponse = luis.findCourse("Just something to test here")
+		for i in range(len(categories)):
+			if categories[i]=='CourseNumber' or categories[i]=='Topic':
+				possCourses = database_functions.findCourse(values[i])
+				luisResponse = luis.findCourse(possCourses)
+			else:
+				luisResponse = "Please try again, I found no courses matching your request"
 	elif action == "ViewSchedule":
 		#scheduleString = "This will be replaced by info from the database"
 		scheduleString = database_functions.viewSchedule(username) # database functions not fully ready

@@ -85,8 +85,8 @@ class LUIS:
         bot_respone = "Ok I'll drop course " + str(courseNumber) + " from your schedule!"
         return bot_respone
     
-    def findCourse(self, description):
-        bot_response = "Are any of these the course you are looking for?"
+    def findCourse(self, courses):
+        bot_response = "Are any of these the course you are looking for? \n" + courses
         return bot_response
 
     def viewSchedule(self, scheduleString):

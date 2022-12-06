@@ -54,7 +54,8 @@ def switch(action, categories, values, username):
 			else:
 				luisResponse = "Please try again, I didn't quite get that course number"
 	elif action == "FindCourse":
-		# go through entities and find a topic or something to pass on to LUIS
+		# go through entities and find a topic or course number to pass on to LUIS
+		## Database function working so do this part next ##
 		luisResponse = luis.findCourse("Just something to test here")
 	elif action == "ViewSchedule":
 		#scheduleString = "This will be replaced by info from the database"

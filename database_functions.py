@@ -172,6 +172,28 @@ def viewSchedule(username):
     except mysql.connector.Error as e:
         print(e)
 
+def findCourse(description):
+    try:
+        cursor = mydb.cursor()
+        cursor.execute("SELECT * FROM course")
+        courses = cursor.fetchall()
+        possibleCourse = ""
+        for course in courses:
+            courseString = ""
+            useableString= ""
+            for c in course[1:]:
+                useableString += str(c) + " "
+                courseString += str(c).lower() + " "
+            print(courseString)
+            if str(description).lower() in courseString:
+                possibleCourse += useableString + "\n"
+        print("Possible course(s): ")
+        print(possibleCourse)
+        return possibleCourse
+    
+    except mysql.connector.Error as e:
+        print(e)
+
 
 # below was used for testing and will not be functionality in the final product
 def query_with_fetchall():
@@ -204,7 +226,7 @@ def query_with_fetchall():
             print(row) """
 
         # testing to get a course column check to make sure we aren't trying to add a column that exists
-        cursor.execute("SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME='schedules'")
+        """ cursor.execute("SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME='schedules'")
         scheduleColumns = cursor.fetchall()
         print("Schedules table columns output: ")
         columnList =[]
@@ -223,11 +245,16 @@ def query_with_fetchall():
                 print("Column for this course: " + columnList[i])
                 columnName = columnList[i]
         cursor.execute("UPDATE schedules SET `"+str(columnName)+"`= \' \'")
-        mydb.commit()
+        mydb.commit() """
         ## the above drops the course but need to make sure courses get shifted
         # so that there aren't random gaps
         # Get the number of courses and then use number of courses to drop and shift
         # info rather than using the whole column name
+
+        # test using partial course number -> shows all
+        findCourse(95)
+        # test using partial course name "Machine Learning" -> shows ecomm and MLPS
+        findCourse("Machine Learning")
         
     except mysql.connector.Error as e:
         print(e)

@@ -60,11 +60,16 @@ def switch(action, categories, values, username):
 				possCourses = database_functions.findCourse(values[i])
 				luisResponse = luis.findCourse(possCourses)
 			else:
-				luisResponse = "Please try again, I found no courses matching your request"
+				luisResponse = "Please try again, I didn't quite get that"
+		if not (len(categories)>0):
+			possCourses = database_functions.findCourse(" ")
+			luisResponse = luis.findCourse(possCourses)
 	elif action == "ViewSchedule":
 		#scheduleString = "This will be replaced by info from the database"
 		scheduleString = database_functions.viewSchedule(username) # database functions not fully ready
 		luisResponse = luis.viewSchedule(scheduleString)
+	else: # eventually this will be an elif for the Help action and small talk will be the else
+		luisResponse = luis.aboutBot()
 	return luisResponse
 
 @app.event("app_mention")
@@ -92,6 +97,8 @@ def mention_handler(body, say):
         
 	bot_response = switch(action, entity_cats, entity_vals, username)
 	say(bot_response + "\n" + user)  # user variable holds the @name of whoever initiated the bot, use everything after the @ as the username for the db calls
+
+# maybe add an on startup so that the user can get a run down of what ScottyBot does
 
 if __name__ == "__main__":
 	handler = SocketModeHandler(app, SLACK_APP_TOKEN)

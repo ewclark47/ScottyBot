@@ -92,3 +92,12 @@ class LUIS:
     def viewSchedule(self, scheduleString):
         bot_response = "OK, let's look at your schedule!" + "\n" + scheduleString
         return bot_response
+
+    # also put in a smalltalk function that will respond with GPT-3 stuff
+    # so that if the user isn't asking anything related to scheduling it
+    # is still interactive
+    def aboutBot(self):
+        return "Hello! I am ScottyBot! I can help you with scheduling here at CMU. I can add, drop and find courses as well as show you your schedule. Let me know what you want course you want to add/drop or what kind of course you are looking for. Or simply ask to view your schedule!"
+
+    def smallTalk(self, utterance):
+        return "GPT-3 Stuff will go in here"

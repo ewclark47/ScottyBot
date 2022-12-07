@@ -163,10 +163,12 @@ def viewSchedule(username):
         cursor.execute(queryString)
         row = cursor.fetchone()
         print(row[3:])
-
         scheduleString=""
-        for r in row[3:]:
-            scheduleString += str(r)+"\n "
+        if len(row[3:])>0:
+            for r in row[3:]:
+                scheduleString += str(r)+"\n "
+        else:
+            scheduleString = "You haven't scheduled anything yet!"
         return scheduleString
         
     except mysql.connector.Error as e:
@@ -184,7 +186,7 @@ def findCourse(description):
             for c in course[1:]:
                 useableString += str(c) + " "
                 courseString += str(c).lower() + " "
-            print(courseString)
+            #print(courseString)
             if str(description).lower() in courseString:
                 possibleCourse += useableString + "\n"
         print("Possible course(s): ")
@@ -196,10 +198,11 @@ def findCourse(description):
 
 
 # below was used for testing and will not be functionality in the final product
-def query_with_fetchall():
+def method_tests():
     try:
         cursor = mydb.cursor()
-        cursor.execute("SELECT * FROM course")
+        # Test course output
+        """ cursor.execute("SELECT * FROM course")
         rows = cursor.fetchall()
 
         print("Total Rows(s):", cursor.rowcount)
@@ -208,8 +211,9 @@ def query_with_fetchall():
             new_str = ""
             for r in row[1:]:
                 new_str += str(r)+", "
-            print(new_str)
+            print(new_str) """
 
+        # test user output
         """ cursor.execute("SELECT * FROM users")
         rows = cursor.fetchall()
         print("Total Users: ", cursor.rowcount)
@@ -252,9 +256,17 @@ def query_with_fetchall():
         # info rather than using the whole column name
 
         # test using partial course number -> shows all
+        print("Finding a course using partial course number: ")
         findCourse(95)
         # test using partial course name "Machine Learning" -> shows ecomm and MLPS
+        print("Finding a course using a topic: ")
         findCourse("Machine Learning")
+        # test find all courses
+        print("Finding all courses: ")
+        findCourse(" ")
+
+        # test viewing an empty schedule
+        print(viewSchedule("U04DHB9JLUQ"))
         
     except mysql.connector.Error as e:
         print(e)
@@ -264,4 +276,4 @@ def query_with_fetchall():
         mydb.close()
 
 if __name__ == '__main__':
-    query_with_fetchall()
+    method_tests()

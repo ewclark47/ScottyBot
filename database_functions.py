@@ -23,8 +23,8 @@ cursor = mydb.cursor()
 # If so, return True. If not, add the user to the database and then 
 # return True
 def checkUser(username):
-    print(username)
-    print(type(username))
+    #print(username)
+    #print(type(username))
     queryString = "SELECT * FROM users WHERE UserName=\'"+str(username)+"\'"
     cursor.execute(queryString)
     validUser = cursor.fetchall()
@@ -36,6 +36,7 @@ def checkUser(username):
         print("It went on to the checkUser second part")
         queryString = "INSERT INTO users(UserName) VALUES (\'"+str(username)+"\')"
         cursor.execute(queryString)
+        mydb.commit()
         queryString = "SELECT * FROM users WHERE UserName=\'"+str(username)+"\'"
         cursor.execute(queryString)
         addedUser = cursor.fetchall()
@@ -60,6 +61,7 @@ def checkUserSchedule(userID):
         print("Went on to checkUserSchedule second part")
         queryString = "INSERT INTO schedules(UserID) VALUES ("+str(userID)+")"
         cursor.execute(queryString)
+        mydb.commit()
         print("Added row to schedules with this users userID")
         return True
 
@@ -75,7 +77,6 @@ def addCourse(username, courseNumber):
             new_str += str(r)+", "
         courseInfo = new_str
         print("Got the course info")
-        #print("UserName check function: " + str(checkUser(username)))
         if checkUser(username):
             print("Validated or added the user")
             queryString = "SELECT UserID FROM users WHERE UserName=\'"+str(username)+"\'"
@@ -91,19 +92,23 @@ def addCourse(username, courseNumber):
                 courseCount = cursor.fetchone()
                 print("Got the Course Count " + str(courseCount[0]))
                 courseCount = courseCount[0]+1
-                ## **EITHER MAKE A CHECK TO SEE IF COLUMN EXIST OR BASELINE X CLASSES FOR EVERYONE AND JUST INSERT INFO
-                # testing below -- ask one of the others to try and add a course
                 cursor.execute("SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME='schedules'")
                 scheduleColumns = cursor.fetchall()
                 columnList =[]
                 for column in scheduleColumns:
                     columnList.append(column[0])
-                updateCol = "Column " + str(courseCount)
+                print("All existing columns retrieved")
+                print(columnList)
+                updateCol = "Course " + str(courseCount)
+                print(updateCol)
+                print(updateCol in columnList)
                 if updateCol in columnList:
-                    queryString = "UPDATE schedules SET `"+updateCol+"`=\'"+str(courseInfo)+"\' WHERE UserID="+str(userID)
+                    queryString = "UPDATE schedules SET `Course "+str(courseCount)+"`=\'"+str(courseInfo)+"\' WHERE UserID="+str(userID)
                     cursor.execute(queryString)
                     mydb.commit()
-                # end testing
+                    queryString = "UPDATE schedules SET CourseCount="+str(courseCount)+" WHERE UserID="+str(userID)
+                    cursor.execute(queryString)
+                    mydb.commit() # manual commit added because database was not receiving autocommit from update query
                 else:
                     queryString = "ALTER TABLE schedules ADD `Course "+str(courseCount)+"` VARCHAR(500)"
                     cursor.execute(queryString)
@@ -128,6 +133,10 @@ def dropCourse(username, courseNumber):
         cursor.execute(queryString)
         userID = cursor.fetchone()
         userID=userID[0]
+        queryString = "SELECT CourseCount FROM schedules WHERE UserID="+str(userID)
+        cursor.execute(queryString)
+        courseCount = cursor.fetchone()
+        courseCount = courseCount[0]
         # iterate through the schedule and figure out how to get the column
         # name for whichever course entry contain the specified course number
         # (our course description) 
@@ -137,6 +146,7 @@ def dropCourse(username, courseNumber):
         columnList =[]
         for column in scheduleColumns:
             columnList.append(column[0])
+        print("All existing columns retrieved")
         cursor.execute("SELECT * FROM schedules WHERE UserID="+str(userID))
         scheduleRow=cursor.fetchone()
         scheduleValues = []
@@ -145,8 +155,24 @@ def dropCourse(username, courseNumber):
         for i in range(len(scheduleValues)):
             if str(courseNumber) in str(scheduleValues[i]):
                 columnName = columnList[i]
-        cursor.execute("UPDATE schedules SET `"+str(columnName)+"`=\' \'")
+        cursor.execute("UPDATE schedules SET `"+str(columnName)+"`=\' \' WHERE UserID="+str(userID))
         mydb.commit()
+        # use the original coursecount to check if columns need slid left
+        courses=[]
+        for i in range(1,courseCount+1):
+            cursor.execute("SELECT `Course "+str(i)+"` FROM schedules WHERE UserID="+str(userID))
+            info = cursor.fetchone()
+            courses.append(info[0])
+        print(courses)
+        courses.remove(' ')
+        for i in range(len(courses)):
+            cursor.execute("UPDATE schedules SET `Course "+str(i+1)+"`=\'"+str(courses[i])+"\' WHERE UserID="+str(userID))
+            mydb.commit()
+        cursor.execute("UPDATE schedules SET `Course "+str(courseCount)+"`=\' \'")
+        mydb.commit()
+        cursor.execute("UPDATE schedules SET CourseCount="+str(courseCount-1)+" WHERE UserID="+str(userID))
+        mydb.commit()
+
         
     except mysql.connector.Error as e:
         print(e)
@@ -154,21 +180,29 @@ def dropCourse(username, courseNumber):
 def viewSchedule(username):
     try:
         cursor = mydb.cursor()
-        queryString = "SELECT UserID FROM users WHERE UserName=\'"+str(username)+"\'"
-        userID = cursor.execute(queryString)
-        userID = cursor.fetchone()
-        userID=userID[0]
-        print("User's ID is: " + str(userID))
-        queryString = "SELECT * FROM schedules WHERE UserID="+str(userID)
-        cursor.execute(queryString)
-        row = cursor.fetchone()
-        print(row[3:])
-        scheduleString=""
-        if len(row[3:])>0:
-            for r in row[3:]:
-                scheduleString += str(r)+"\n "
-        else:
-            scheduleString = "You haven't scheduled anything yet!"
+        if checkUser(username):
+            queryString = "SELECT UserID FROM users WHERE UserName=\'"+str(username)+"\'"
+            userID = cursor.execute(queryString)
+            userID = cursor.fetchone()
+            userID=userID[0]
+            print("User's ID is: " + str(userID))
+            if checkUserSchedule(userID):
+                queryString = "SELECT * FROM schedules WHERE UserID="+str(userID)
+                cursor.execute(queryString)
+                row = cursor.fetchone()
+                #print(row[3:])
+                scheduleString=""
+                print("start loop through schedule")
+                if len(row[3:])>0:
+                    for r in row[3:]:
+                        if r == "" or r == " ":
+                            scheduleString+=""
+                        else:
+                            scheduleString += "\n" + str(r)
+                    if scheduleString=="":
+                        scheduleString="You haven't scheduled anything yet!"
+                else:
+                    scheduleString = "You haven't scheduled anything yet!"
         return scheduleString
         
     except mysql.connector.Error as e:
@@ -201,72 +235,39 @@ def findCourse(description):
 def method_tests():
     try:
         cursor = mydb.cursor()
-        # Test course output
-        """ cursor.execute("SELECT * FROM course")
-        rows = cursor.fetchall()
-
-        print("Total Rows(s):", cursor.rowcount)
-        for row in rows:
-            print(row)
-            new_str = ""
-            for r in row[1:]:
-                new_str += str(r)+", "
-            print(new_str) """
-
-        # test user output
-        """ cursor.execute("SELECT * FROM users")
-        rows = cursor.fetchall()
-        print("Total Users: ", cursor.rowcount)
-        for row in rows:
-            print(row) """
-
-        # testing to figure out how to make updates go through in the database
-        """ cursor.execute("UPDATE users SET UserName='testing testing' WHERE UserID=2")
-        mydb.commit()
-        cursor.execute("SELECT * FROM users")
-        rows = cursor.fetchall()
-        print("Total Users: ", cursor.rowcount)
-        for row in rows:
-            print(row) """
-
-        # testing to get a course column check to make sure we aren't trying to add a column that exists
-        """ cursor.execute("SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME='schedules'")
-        scheduleColumns = cursor.fetchall()
-        print("Schedules table columns output: ")
-        columnList =[]
-        for column in scheduleColumns:
-            columnList.append(column[0])
-        print(columnList)
-        print('Course 1' in columnList)
-        print('Course 4' in columnList)
-        cursor.execute("SELECT * FROM schedules WHERE UserID="+str(24))
-        scheduleRow=cursor.fetchone()
-        scheduleValues = []
-        for value in scheduleRow:
-            scheduleValues.append(value)
-        for i in range(len(scheduleValues)):
-            if str(95702) in str(scheduleValues[i]):
-                print("Column for this course: " + columnList[i])
-                columnName = columnList[i]
-        cursor.execute("UPDATE schedules SET `"+str(columnName)+"`= \' \'")
-        mydb.commit() """
-        ## the above drops the course but need to make sure courses get shifted
-        # so that there aren't random gaps
-        # Get the number of courses and then use number of courses to drop and shift
-        # info rather than using the whole column name
-
         # test using partial course number -> shows all
-        print("Finding a course using partial course number: ")
-        findCourse(95)
+        """ print("Finding a course using partial course number: ")
+        findCourse(95) """
         # test using partial course name "Machine Learning" -> shows ecomm and MLPS
-        print("Finding a course using a topic: ")
-        findCourse("Machine Learning")
-        # test find all courses
-        print("Finding all courses: ")
-        findCourse(" ")
+        """ print("Finding a course using a topic: ")
+        findCourse("Machine Learning") """
+        # test find all courses -> works
+        """ print("Finding all courses: ")
+        findCourse(" ") """
 
-        # test viewing an empty schedule
-        print(viewSchedule("U04DHB9JLUQ"))
+        # test viewing an empty schedule -> works
+        #print(viewSchedule("nonexistuser"))
+        # test adding a course when others have more courses -> works
+        #addCourse("testuserrando", 95729)
+        # test dropping a course -> works
+        #dropCourse("testuserrando", 95729)
+
+        # testing to make sure the new drop method shifts -> works
+        """ addCourse("randotestuser",95702)
+        addCourse("randotestuser",95729)
+        addCourse("randotestuser",95828)
+        dropCourse("randotestuser",95702)
+        print(viewSchedule("randotestuser"))
+        addCourse("randotest",95702)
+        addCourse("randotest",95729)
+        addCourse("randotest",95828)
+        dropCourse("randotest",95729)
+        print(viewSchedule("randotest"))
+        addCourse("randouser",95702)
+        addCourse("randouser",95729)
+        addCourse("randouser",95828)
+        dropCourse("randouser",95828)
+        print(viewSchedule("randouser")) """
         
     except mysql.connector.Error as e:
         print(e)

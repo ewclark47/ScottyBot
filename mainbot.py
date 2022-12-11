@@ -20,6 +20,7 @@ from slack_bolt import App
 from slack_bolt.adapter.socket_mode import SocketModeHandler
 from LUIS_functions import LUIS
 import database_functions
+from gpt3 import gpt3
 
 # set up the environment 
 load_dotenv()
@@ -29,10 +30,13 @@ clu_endpoint = environ["AZURE_CONVERSATIONS_ENDPOINT"]
 clu_key = environ["AZURE_CONVERSATIONS_KEY"]
 project_name = environ["AZURE_CONVERSATIONS_PROJECT_NAME"]
 deployment_name = environ["AZURE_CONVERSATIONS_DEPLOYMENT_NAME"]
+gpt3_api_key = environ["GPT3_API_KEY"]
 
 # intialize the bolt app for ScottyBot and the LUIS functionality
 app = App(token = SLACK_BOT_TOKEN)
 luis = LUIS(clu_endpoint, clu_key, project_name, deployment_name)
+# initialize gpt3 functionality
+gpt3 = gpt3(gpt3_api_key)
 
 # LUIS response and database functionality based on LUIS determined intent
 def switch(action, categories, values, username):

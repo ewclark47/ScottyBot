@@ -20,6 +20,7 @@ from slack_bolt import App
 from slack_bolt.adapter.socket_mode import SocketModeHandler
 from LUIS_functions import LUIS
 import database_functions
+import openai
 from gpt3 import gpt3
 
 # set up the environment 
@@ -30,16 +31,16 @@ clu_endpoint = environ["AZURE_CONVERSATIONS_ENDPOINT"]
 clu_key = environ["AZURE_CONVERSATIONS_KEY"]
 project_name = environ["AZURE_CONVERSATIONS_PROJECT_NAME"]
 deployment_name = environ["AZURE_CONVERSATIONS_DEPLOYMENT_NAME"]
-gpt3_api_key = environ["GPT3_API_KEY"]
+openai.api_key = environ["OPENAI_API_KEY"]
 
 # intialize the bolt app for ScottyBot and the LUIS functionality
 app = App(token = SLACK_BOT_TOKEN)
 luis = LUIS(clu_endpoint, clu_key, project_name, deployment_name)
 # initialize gpt3 functionality
-gpt3 = gpt3(gpt3_api_key)
+gpt3 = gpt3(openai.api_key)
 
 # LUIS response and database functionality based on LUIS determined intent
-def switch(action, categories, values, username):
+def switch(action, categories, values, username, message):
 	luisResponse="Sorry, I didn't quite get that"
 	if action == "AddCourse":
 		# then go through entity categorys to see if there is a course number, if not request it
@@ -73,7 +74,9 @@ def switch(action, categories, values, username):
 		scheduleString = database_functions.viewSchedule(username) # database functions not fully ready
 		luisResponse = luis.viewSchedule(scheduleString)
 	else: # eventually this will be an elif for the Help action and small talk will be the else
-		luisResponse = luis.aboutBot()
+		#luisResponse = luis.aboutBot()
+		print("Calling gpt3")
+		luisResponse = gpt3.gpt_response(message)
 	return luisResponse
 
 @app.event("app_mention")
@@ -99,7 +102,7 @@ def mention_handler(body, say):
 		entity_cats.append(entity["category"])
 		entity_vals.append(entity["text"])
         
-	bot_response = switch(action, entity_cats, entity_vals, username)
+	bot_response = switch(action, entity_cats, entity_vals, username, message)
 	say(bot_response + "\n" + user)  # user variable holds the @name of whoever initiated the bot, use everything after the @ as the username for the db calls
 
 # maybe add an on startup so that the user can get a run down of what ScottyBot does

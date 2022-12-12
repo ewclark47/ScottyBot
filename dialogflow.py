@@ -28,6 +28,7 @@ def webhook():
         action = df_intent['displayName']
     message = df_query.get('queryText')
     params = df_query.get('parameters') # this is a dictionary
+    print( params)
     print("retrieved necessary info, starting switch statement")
     # pull the user ID from the original slack payload
     user = ''
@@ -37,7 +38,7 @@ def webhook():
     slack_event = slack_data.get('event')
     user = slack_event['user'] 
     #print(user)
-    fulfillmentText = switch(action, message, user)
+    fulfillmentText = switch(action, message, user, params)
 
 
     return {
@@ -46,22 +47,47 @@ def webhook():
     }
     
 
-def switch(action, message, user):
+def switch(action, message, user, params):
     print("started switch statment. responding based on action: " + action)
     df_response ="Sorry, I didn't quite get that"
     if action == "AddCourse":
-        # input the database function here with the user
-        df_response = "Dialogflow says adding course stuff here"
-
+        if len(params['course-number'])>0:
+            courses_string = ""
+            for course in params['course-number']:
+                database_functions.addCourse(user, course)
+                courses_string += str(course) + " "
+            df_response = gpt3.gpt_response(message)
+        elif params['topic'] != "":
+            poss_course = database_functions.findCourse(params['topic'])
+            df_response = "Are any of these the course you want? \n" + poss_course + "\n" + "If so, please try to add by course number"
+        else:
+            df_response = "I can't tell what course you would like to add. Please try again with a more specific course topic or course number."
     elif action == "DropCourse":
-        # input the database function here with the user
-        df_response = "Dialogflow says dropping course stuff here"
+        if len(params['course-number'])>0:
+            courses_string=''
+            for course in params['course-number']:
+                database_functions.dropCourse(user, course)
+                courses_string += str(course) + " "
+            df_response = gpt3.gpt_response(message)
+        elif params['topic'] != "":
+            poss_course = database_functions.findCourse(params['topic'])
+            df_response = "Are any of these the course you want to drop? \n" + poss_course + "\n" + "If so, please try to drop by course number"
+        else:
+            df_response = "I can't tell what course you would like to drop. Please try again with a more specific course topic or course number."
     elif action == "FindCourse":
-        # input the database function here with the user
-        df_response = "Dialogflow says finding course stuff here"
+        if len(params['course-number'])>0:
+            courses_string = ""
+            for course in params['course-number']:
+                courses_string += database_functions.findCourse(course) + "\n"
+            df_response = gpt3.gpt_response(message) + "\n" + courses_string 
+        elif params['topic'] != "":
+            courses_string = database_functions.findCourse(params['topic'])
+            df_response =  gpt3.gpt_response(message) + "\n" + courses_string
+        else:
+            df_response = "I can't tell what course you are looking for. Please try again with a more specific course topic or course number."        
     elif action == "ViewSchedule":
-        # input the database function here with the user
-        df_response = "Dialogflow says viewing schedule stuff here"
+        schedule = database_functions.viewSchedule(user)
+        df_response = "This is what your schedule looks like: " + "\n" + schedule
     else: 
         df_response = gpt3.gpt_response(message)
     return df_response

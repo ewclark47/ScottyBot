@@ -201,8 +201,11 @@ def viewSchedule(username):
                             scheduleString += "\n" + str(r)
                     if scheduleString=="":
                         scheduleString="You haven't scheduled anything yet!"
+                        print(scheduleString)
                 else:
                     scheduleString = "You haven't scheduled anything yet!"
+                    print(scheduleString)
+        print(scheduleString)
         return scheduleString
         
     except mysql.connector.Error as e:

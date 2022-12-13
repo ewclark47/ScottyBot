@@ -9,13 +9,18 @@ in order to add the user or schedule if needed prior to performing
 any queries.
 """
 import mysql.connector
+import os
+import ssl
 
 mydb = mysql.connector.connect(
-    host = "localhost",
-    user = "root",
-    passwd = "",
-    database = "ScottyBot"
-)
+    user="ScottyAdmin", 
+    password = os.environ["DB_PASSWORD"], 
+    host="scottybot-db.mysql.database.azure.com", 
+    port=3306, 
+    database="scottybot", 
+    ssl_ca="DigiCertGlobalRootCA.crt.pem",
+    tls_versions = ["TLSv1", "TLSv1.1", 'TLSv1.2', 'TLSv1.3']
+    )
 cursor = mydb.cursor()
 
 # Check to see if the user that mentioned ScottyBot is in the database
@@ -238,8 +243,8 @@ def method_tests():
         """ print("Finding a course using partial course number: ")
         findCourse(95) """
         # test using partial course name "Machine Learning" -> shows ecomm and MLPS
-        """ print("Finding a course using a topic: ")
-        findCourse("Machine Learning") """
+        print("Finding a course using a topic: ")
+        findCourse("Design")
         # test find all courses -> works
         """ print("Finding all courses: ")
         findCourse(" ") """

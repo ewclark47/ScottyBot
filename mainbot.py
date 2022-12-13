@@ -1,5 +1,4 @@
 """
-author: Elliott Clark
 This script initializes a Slack Bot and a Mircrosoft Azure LUIS project. The Bot
 then performs one of various functions based on user input whenever a user in the
 Slack channel types @ScottyBot with a message. This script pulls out the pertinent

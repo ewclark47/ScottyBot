@@ -1,5 +1,4 @@
 """
-author: Elliott Clark
 Module to handle all of the database queries that need to be made 
 for ScottyBots functionality.
 This module contains functions to add a course to a users schedule,

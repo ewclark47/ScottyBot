@@ -1,7 +1,6 @@
 """
 help with integration into bot at: https://github.com/Azure/azure-sdk-for-python/blob/main/sdk/cognitivelanguage/azure-ai-language-conversations/samples/sample_analyze_conversation_app.py
 
-author: Elliott Clark
 This module incorporates the functionality of the Microsoft Azure LUIS project 
 for ScottyBot. The LUIS class includes functions to iniate and instance of LUIS.
 Use LUIS to predict Intent and included Entities from user input (message to ScottyBot).

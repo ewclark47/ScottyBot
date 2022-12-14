@@ -21,16 +21,17 @@ from LUIS_functions import LUIS
 import database_functions
 import openai
 from gpt3 import gpt3
+#from twilio.twiml.messaging_response import MessagingResponse
 
 # set up the environment 
 load_dotenv()
-SLACK_BOT_TOKEN = environ['SLACK_BOT_TOKEN']
-SLACK_APP_TOKEN = environ['SLACK_APP_TOKEN']
-clu_endpoint = environ["AZURE_CONVERSATIONS_ENDPOINT"]
-clu_key = environ["AZURE_CONVERSATIONS_KEY"]
-project_name = environ["AZURE_CONVERSATIONS_PROJECT_NAME"]
-deployment_name = environ["AZURE_CONVERSATIONS_DEPLOYMENT_NAME"]
-openai.api_key = environ["OPENAI_API_KEY"]
+SLACK_BOT_TOKEN = environ.get('SLACK_BOT_TOKEN')
+SLACK_APP_TOKEN = environ.get('SLACK_APP_TOKEN')
+clu_endpoint = environ.get("AZURE_CONVERSATIONS_ENDPOINT")
+clu_key = environ.get("AZURE_CONVERSATIONS_KEY")
+project_name = environ.get("AZURE_CONVERSATIONS_PROJECT_NAME")
+deployment_name = environ.get("AZURE_CONVERSATIONS_DEPLOYMENT_NAME")
+openai.api_key = environ.get("OPENAI_API_KEY")
 
 # intialize the bolt app for ScottyBot and the LUIS functionality
 app = App(token = SLACK_BOT_TOKEN)
@@ -87,7 +88,7 @@ def mention_handler(body, say):
 	message = text[15:] # this is just the user input message without the bot name
 	# the above is the full uterance
 	#print(event) 
-	print(message)
+	#print(message)
 	
 	# store the intent that LUIS determined from user input
 	luisPrediction = luis.getLuisResults(message)

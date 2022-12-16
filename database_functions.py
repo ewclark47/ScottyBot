@@ -1,5 +1,5 @@
 """
-author: Elliott Clark
+author: Elliott Clark, Mayank Bansal
 
 Module to handle all of the database queries that need to be made 
 for ScottyBots functionality.
@@ -9,6 +9,19 @@ display them to the user and display a users individual schedule.
 This module also validates user and schedule existence in serparate 
 in order to add the user or schedule if needed prior to performing
 any queries.
+
+This module requires that `mysql` be installed within the Python
+environment you are running this script in.
+
+This module contains the following functions:
+
+    * checkuser - checks if messaging user has an entry in the database
+    * checkUserSchedule - checks the schedule for the user
+    * addCourse - adds courses to a user's schedule
+    * dropCourse - drops courses from a user's schedule
+    * viewSchedule - shows the schedule for a user
+    * findCourse - finds a course based on a description
+    * method_tests - various tests for the module
 """
 import mysql.connector
 
@@ -37,8 +50,6 @@ def checkUser(username):
         Based on the presence of user in database returns true or false 
     """
 
-    # print(username)
-    # print(type(username))
     queryString = "SELECT * FROM users WHERE UserName=\'"+str(username)+"\'"
     cursor.execute(queryString)
     validUser = cursor.fetchall()
@@ -60,10 +71,6 @@ def checkUser(username):
         print(addedUser[0][0])
         print("added user: " + str(addedUser))
         return True
-
-# Check to see if the user that mentioned ScottyBot has a schedule
-# If so, return True. If not, add a schedule for the user to the database and then
-# return True
 
 
 def checkUserSchedule(userID):
@@ -283,7 +290,6 @@ def viewSchedule(username):
                     str(userID)
                 cursor.execute(queryString)
                 row = cursor.fetchone()
-                # print(row[3:])
                 scheduleString = ""
                 print("start loop through schedule")
                 if len(row[3:]) > 0:
@@ -331,7 +337,6 @@ def findCourse(description):
             for c in course[1:]:
                 useableString += str(c) + " "
                 courseString += str(c).lower() + " "
-            # print(courseString)
             if str(description).lower() in courseString:
                 possibleCourse += useableString + "\n"
         print("Possible course(s): ")

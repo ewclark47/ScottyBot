@@ -70,7 +70,6 @@ def webhook():
     slack_data = slack_payload.get('data')
     slack_event = slack_data.get('event')
     user = slack_event['user']
-    # print(user)
     fulfillmentText = switch(action, message, user, params)
 
     return {
